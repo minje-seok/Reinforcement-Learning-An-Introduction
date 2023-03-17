@@ -1,23 +1,50 @@
-# minje-seok/Git-RL/env
-import torch
+'''
+github.com/minje-seok/Git-RL/env/grid.py
 
-device = torch.cuda.current_device()
+"Environment - Grid"
+
+[[ init, 0, 0, 0 ],
+[ 0, 0, 0, 0 ],
+[ 0, 0, 0, 0 ],
+[ 0, 0, 0, dst ]]
+
+'''
+import torch
+import numpy as np
+
+print("{0}(CUDA available: {1})".format(torch.cuda.get_device_name(0), torch.cuda.is_available()))
+device = torch.cuda.device(0)
 
 class GridEnv():
     def __init__(self):
-        self.state = torch.tensor([-1, -1])
+        self.state = np.array([[1, 0, 0, 0],
+                               [0, -1, 0, 0],
+                               [0, 0, 0, 0],
+                               [0, -1, 0, 99]])
         self.action = -1
         self.reward = 0
 
 
-print(GridEnv().state)
-print(torch.__version__)
-print(torch.backends.cudnn.version())
-#
-print("쿠다 가능 :{}".format(torch.cuda.is_available()))
-print("현재 디바이스 :{}".format(torch.cuda.current_device()))
-print("디바이스 갯수 :{}".format(torch.cuda.device_count()))
+    def step(self, action):
+        x, y = np.where(self.state == 1)
+        print(x, y)
+        pos_x = int(x)
+        pos_y = int(y)
+        print(pos_x, pos_y)
+        if action == 'r':
+            if pos_x < self.state.shape[0] | self.state[pos_x][pos_y+1] != -1:
+                self.state[pos_x + 1] = 1
+                self.state[pos_x] = 0
+                self.reward -= 1
+                if self.state[pos_x][pos_y] == 99:
+                    self.reward += 1
+                    return
+            else:
+                self.reward -= 1
+                return
 
-for idx in range(0, torch.cuda.device_count()):
-    print("디바이스 :{}".format(torch.cuda.device(idx)))
-    print("디바이스 이름 :{}".format(torch.cuda.get_device_name(idx)))
+env = GridEnv()
+
+for i in range(3):
+    env.step('r')
+    print(env.state)
