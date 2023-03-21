@@ -35,7 +35,7 @@ class GridEnv():
     def get_action_space(self):
         return self.action_space
 
-    def step(self, action):
+    def step(self, action, state = [0][0]):
         x, y = np.where(self.state == 1)
         pos_x = int(x)
         pos_y = int(y)
