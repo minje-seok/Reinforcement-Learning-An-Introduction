@@ -17,7 +17,7 @@ device = torch.cuda.device(0)
 
 class GridEnv():
     def __init__(self):
-        self.init_state = np.array([[1, 0, 0, 0],
+        self.init_state = np.array([[0, 0, 0, 0],
                                [0, -1, 0, 0],
                                [0, 0, 0, 0],
                                [0, 0, -1, 99]])
@@ -28,6 +28,12 @@ class GridEnv():
         self.done = 0
         self.state_space = self.state.shape[0]
         self.action_space = 4
+
+    def create_grid(self, i, j):
+        self.state = self.init_state
+        self.state[i][j] = 1
+
+        return self.state, self.reward, self.done
 
     def get_state_space(self):
         return self.state_space
