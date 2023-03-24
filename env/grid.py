@@ -32,7 +32,6 @@ class GridEnv():
     def create_grid(self, i, j):
         self.state = self.init_state
         self.state[i][j] = 1
-
         return self.state, self.reward, self.done
 
     def get_state_space(self):
