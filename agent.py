@@ -3,29 +3,32 @@ import numpy as np
 from env import grid
 from env.grid import GridEnv
 
-env = GridEnv()
+
 
 class DP:
-    def __init__(self):
-        self.tabular = np.zeros(4, 4)
+    def __init__(self, env):
+        self.tabular = np.zeros((4, 4))
         self.pre_tabular = self.tabular
+        self.env = env
 
     def iteration_step(self):
         for i in range(self.tabular.shape[0]):
             for j in range(self.tabular.shape[1]):
                 self.pre_tabular = self.tabular
-                env.create_grid(i, j)
-                self.tabular[i, j] = 0.25 * (env.step('r') + self.pre_tabular[i, j]) + \
-                                   0.25 * (env.step('l') + self.pre_tabular[i, j]) + \
-                                   0.25 * (env.step('u') + self.pre_tabular[i, j]) + \
-                                   0.25 * (env.step('d') + self.pre_tabular[i, j])
-                env.reset()
+
+                for a in ["r", "l", "u", "d"]:
+                    self.env.reset()
+                    self.env.create_grid(i, j)
+
+                    state, reward, done = self.env.step(a)
+                    self.tabular[i][j] += 0.25 * (reward + self.pre_tabular[i][j])
 
         self.pre_tabular = self.tabular
 
     def show(self):
-        return self.tabular
+        print(self.tabular)
 
-
-agent = DP()
-print(agent.state)
+env = GridEnv()
+agent = DP(env)
+agent.iteration_step()
+agent.show()

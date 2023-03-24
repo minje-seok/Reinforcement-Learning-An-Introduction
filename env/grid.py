@@ -18,9 +18,9 @@ device = torch.cuda.device(0)
 class GridEnv():
     def __init__(self):
         self.init_state = np.array([[0, 0, 0, 0],
-                               [0, -1, 0, 0],
                                [0, 0, 0, 0],
-                               [0, 0, -1, 99]])
+                               [0, 0, 0, 0],
+                               [0, 0, 0, 0]])
         self.state = self.init_state
         self.init_action = -1
         self.action = self.init_action
@@ -44,6 +44,7 @@ class GridEnv():
         x, y = np.where(self.state == 1)
         pos_x = int(x)
         pos_y = int(y)
+        print(self.state)
         if action == 'r':
             if self.state[pos_x][pos_y + 1] == -1:
                 self.reward -= 1
@@ -118,18 +119,17 @@ class GridEnv():
     def show(self):
         print(self.state, 'reward: ', self.reward, ', done: ', self.done)
 
-env = GridEnv()
-print()
-for i in range(1):
-    next_state, reward, done = env.step('r')
-    print(next_state, 'reward: ', reward)
-    next_state, reward, done = env.step('r')
-    print(next_state, 'reward: ', reward)
-    next_state, reward, done = env.step('r')
-    print(next_state, 'reward: ', reward)
-    next_state, reward, done = env.step('d')
-    print(next_state, 'reward: ', reward)
-    next_state, reward, done = env.step('d')
-    print(next_state, 'reward: ', reward)
-    next_state, reward, done = env.step('d')
-    print(next_state, 'reward: ', reward)
+
+# for i in range(1):
+#     next_state, reward, done = env.step('r')
+#     print(next_state, 'reward: ', reward)
+#     next_state, reward, done = env.step('r')
+#     print(next_state, 'reward: ', reward)
+#     next_state, reward, done = env.step('r')
+#     print(next_state, 'reward: ', reward)
+#     next_state, reward, done = env.step('d')
+#     print(next_state, 'reward: ', reward)
+#     next_state, reward, done = env.step('d')
+#     print(next_state, 'reward: ', reward)
+#     next_state, reward, done = env.step('d')
+#     print(next_state, 'reward: ', reward)
