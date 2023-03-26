@@ -44,7 +44,7 @@ class GridEnv():
         x, y = np.where(self.state == 1)
         pos_x = int(x)
         pos_y = int(y)
-        print(self.state)
+        print(pos_x, pos_y)
         if action == 'r':
             if self.state[pos_x][pos_y + 1] == -1:
                 self.reward -= 1

@@ -15,13 +15,14 @@ class DP:
         for i in range(self.tabular.shape[0]):
             for j in range(self.tabular.shape[1]):
                 self.pre_tabular = self.tabular
-
                 for a in ["r", "l", "u", "d"]:
+                    print(a)
                     self.env.reset()
                     self.env.create_grid(i, j)
-
+                    print(self.env.state)
                     state, reward, done = self.env.step(a)
                     self.tabular[i][j] += 0.25 * (reward + self.pre_tabular[i][j])
+
 
         self.pre_tabular = self.tabular
 
@@ -31,4 +32,3 @@ class DP:
 env = GridEnv()
 agent = DP(env)
 agent.iteration_step()
-agent.show()
