@@ -32,6 +32,7 @@ class GridEnv():
     def create_grid(self, i, j):
         self.state = self.init_state
         self.state[i][j] = 1
+        print("---create_grid[{0}][{1}]---".format(i, j))
         return self.state, self.reward, self.done
 
     def get_state_space(self):
@@ -44,30 +45,26 @@ class GridEnv():
         x, y = np.where(self.state == 1)
         pos_x = int(x)
         pos_y = int(y)
-        print(pos_x, pos_y)
-        if action == 'r':
-            if self.state[pos_x][pos_y + 1] == -1:
+        if action == 'l':
+            try:
+                self.state[pos_x][pos_y - 1]
+            except IndexError:
                 self.reward -= 1
+                self.done = 0
                 return self.state, self.reward, self.done
 
-            elif pos_y < (self.state.shape[0]-1):
-                if self.state[pos_x][pos_y] == 99:
-                    self.reward += 99
-                    self.done = 1
-                    return self.state, self.reward, self.done
-
-                self.state[pos_x][pos_y + 1] = 1
-                self.state[pos_x][pos_y] = 0
-                self.reward -= 1
-                return self.state, self.reward, self.done
-
-        elif action == 'l':
             if self.state[pos_x][pos_y - 1] == -1:
                 self.reward -= 1
+                self.done = 0
                 return self.state, self.reward, self.done
 
-            elif pos_y > 0:
-                if self.state[pos_x][pos_y] == 99:
+            elif pos_y == 0:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            else:
+                if self.state[pos_x][pos_y - 1] == 99:
                     self.reward += 99
                     self.done = 1
                     return self.state, self.reward, self.done
@@ -75,15 +72,59 @@ class GridEnv():
                 self.state[pos_x][pos_y - 1] = 1
                 self.state[pos_x][pos_y] = 0
                 self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+        elif action == 'r':
+            try:
+                self.state[pos_x][pos_y + 1]
+            except IndexError:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            if self.state[pos_x][pos_y + 1] == -1:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            elif pos_y == self.state.shape[0] - 1:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            else:
+                if self.state[pos_x][pos_y + 1] == 99:
+                    self.reward += 99
+                    self.done = 1
+                    return self.state, self.reward, self.done
+
+                self.state[pos_x][pos_y + 1] = 1
+                self.state[pos_x][pos_y] = 0
+                self.reward -= 1
+                self.done = 0
                 return self.state, self.reward, self.done
 
         if action == 'u':
-            if self.state[pos_x - 1][pos_y] == -1:
+            try:
+                self.state[pos_x - 1][pos_y]
+            except IndexError:
                 self.reward -= 1
+                self.done = 0
                 return self.state, self.reward, self.done
 
-            elif pos_x > 0:
-                if self.state[pos_x][pos_y] == 99:
+            if self.state[pos_x - 1][pos_y] == -1:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            elif pos_x == 0:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            else:
+                if self.state[pos_x - 1][pos_y] == 99:
                     self.reward += 99
                     self.done = 1
                     return self.state, self.reward, self.done
@@ -91,14 +132,28 @@ class GridEnv():
                 self.state[pos_x - 1][pos_y] = 1
                 self.state[pos_x][pos_y] = 0
                 self.reward -= 1
+                self.done = 0
                 return self.state, self.reward, self.done
 
         elif action == 'd':
-            if self.state[pos_x + 1][pos_y] == -1:
+            try:
+                self.state[pos_x + 1][pos_y]
+            except IndexError:
                 self.reward -= 1
+                self.done = 0
                 return self.state, self.reward, self.done
 
-            elif pos_x < (self.state.shape[0] - 1):
+            if self.state[pos_x + 1][pos_y] == -1:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            elif pos_x == self.state.shape[0] - 1:
+                self.reward -= 1
+                self.done = 0
+                return self.state, self.reward, self.done
+
+            else:
                 if self.state[pos_x + 1][pos_y] == 99:
                     self.reward += 99
                     self.done = 1
@@ -107,10 +162,16 @@ class GridEnv():
                 self.state[pos_x + 1][pos_y] = 1
                 self.state[pos_x][pos_y] = 0
                 self.reward -= 1
+                self.done = 0
+
                 return self.state, self.reward, self.done
 
     def reset(self):
-        self.state = self.init_state
+        # self.state = self.init_state
+        x, y = np.where(self.state == 1)
+        pos_x = int(x)
+        pos_y = int(y)
+        self.state[pos_x][pos_y] = 0
         self.action = self.init_action
         self.reward = 0
         self.done = 0
@@ -119,17 +180,18 @@ class GridEnv():
     def show(self):
         print(self.state, 'reward: ', self.reward, ', done: ', self.done)
 
-
+# env = GridEnv()
+# env.create_grid(0 ,0)
 # for i in range(1):
+#     print('go right')
 #     next_state, reward, done = env.step('r')
 #     print(next_state, 'reward: ', reward)
-#     next_state, reward, done = env.step('r')
+#     print('go left')
+#     next_state, reward, done = env.step('l')
 #     print(next_state, 'reward: ', reward)
-#     next_state, reward, done = env.step('r')
-#     print(next_state, 'reward: ', reward)
+#     print('go down')
 #     next_state, reward, done = env.step('d')
 #     print(next_state, 'reward: ', reward)
-#     next_state, reward, done = env.step('d')
-#     print(next_state, 'reward: ', reward)
-#     next_state, reward, done = env.step('d')
+#     print('go up')
+#     next_state, reward, done = env.step('u')
 #     print(next_state, 'reward: ', reward)
