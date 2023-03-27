@@ -12,8 +12,8 @@ github.com/minje-seok/Git-RL/env/grid.py
 import torch
 import numpy as np
 
-print("{0}(CUDA available: {1})".format(torch.cuda.get_device_name(0), torch.cuda.is_available()))
-device = torch.cuda.device(0)
+# print("{0}(CUDA available: {1})".format(torch.cuda.get_device_name(0), torch.cuda.is_available()))
+# device = torch.cuda.device(0)
 
 class GridEnv():
     def __init__(self):
@@ -32,7 +32,7 @@ class GridEnv():
     def create_grid(self, i, j):
         self.state = self.init_state
         self.state[i][j] = 1
-        print("---create_grid[{0}][{1}]---".format(i, j))
+        # print("---create_grid[{0}][{1}]---".format(i, j))
         return self.state, self.reward, self.done
 
     def get_state_space(self):
@@ -163,7 +163,6 @@ class GridEnv():
                 self.state[pos_x][pos_y] = 0
                 self.reward -= 1
                 self.done = 0
-
                 return self.state, self.reward, self.done
 
     def reset(self):
