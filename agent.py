@@ -28,16 +28,19 @@ class DP:
         '''
 
         iter = 0
+        # Repeat until the difference between the old value function and the new value function is smaller than theta, the specified threshold.
         while True:
             iter += 1
             delta = 0
             for i in range(self.V.shape[0]):
                 for j in range(self.V.shape[1]):
+                    # Excluding the start state and terminal state, the value function is calculated.
                     if (i == 0 and j == 0) or (i == 3 and j == 3):
                         continue
 
                     old_V = self.V[i][j]
                     new_V = 0
+                    # A new value function is calculated according to the probability of each action.
                     for action, action_prob in enumerate(policy):
                         env.create_grid(i, j)
                         next_state, reward, done = env.step(action)
@@ -47,7 +50,8 @@ class DP:
                     self.next_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
             self.V = self.next_V.copy()
-
+            
+            # If the delta is smaller than theta, the loop is stopped with break.
             if delta < theta:
                 print('Policy Evaluation - iter:{0}'.format(iter))
                 print(self.next_V, '\n')
