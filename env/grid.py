@@ -1,14 +1,4 @@
-'''
-github.com/minje-seok/Git-RL/env/grid.py
 
-"Environment - Grid"
-
-[[ init, 0, 0, 0 ],
-[ 0, -1, 0, 0 ],
-[ 0, 0, 0, 0 ],
-[ 0, 0, -1, dst ]]
-
-'''
 import torch
 import numpy as np
 
@@ -16,11 +6,25 @@ import numpy as np
 # device = torch.cuda.device(0)
 
 class GridEnv():
+    '''
+    github.com/minje-seok/Git-RL/env/grid.py
+
+    "Environment - Grid"
+    Creates an environment with a 4 by 4 array(default) as state, with the first and last elements defined as init state
+    and terminal state, respectively(resizeable through self.init_state).
+
+    [[ init, 0, 0, 0 ],
+    [ 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0 ],
+    [ 0, 0, 0, dst ]]
+
+    Args:
+        state(np.array): A numpy array in which the information of the current location is represented by 1.
+        action(int): top down left right (discrete). If the state in the direction of the action is blocked or at the end of the array, the position is maintained.
+        reward(int): -1 when moving to any state except init state and terminal state. If the terminal state is reached, 99 is paid.
+    '''
     def __init__(self):
-        self.init_state = np.array([[0, 0, 0, 0],
-                               [0, 0, 0, 0],
-                               [0, 0, 0, 0],
-                               [0, 0, 0, 0]])
+        self.init_state = np.zeros((4, 4))
         self.state = self.init_state
         self.init_action = -1
         self.action = self.init_action
@@ -172,8 +176,6 @@ class GridEnv():
                 self.done = 0
                 return self.state, self.reward, self.done
 
-
-
     def reset(self):
         # self.state = self.init_state
         x, y = np.where(self.state == 1)
@@ -187,19 +189,3 @@ class GridEnv():
 
     def show(self):
         print(self.state, 'reward: ', self.reward, ', done: ', self.done)
-
-# env = GridEnv()
-# env.create_grid(0 ,0)
-# for i in range(1):
-#     print('go right')
-#     next_state, reward, done = env.step('r')
-#     print(next_state, 'reward: ', reward)
-#     print('go left')
-#     next_state, reward, done = env.step('l')
-#     print(next_state, 'reward: ', reward)
-#     print('go down')
-#     next_state, reward, done = env.step('d')
-#     print(next_state, 'reward: ', reward)
-#     print('go up')
-#     next_state, reward, done = env.step('u')
-#     print(next_state, 'reward: ', reward)

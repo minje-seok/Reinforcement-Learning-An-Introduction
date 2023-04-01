@@ -7,13 +7,15 @@ env = GridEnv()
 random_policy = [0.25, 0.25, 0.25, 0.25]
 
 class DP:
-    def __init__(self):
+    def __init__(self, env, policy):
+        self.env = env
+        self.policy = policy
         self.V = np.zeros((4, 4))
         self.next_V = self.V.copy()
 
         self.in_place_V = np.zeros((4, 4))
 
-    def policy_evaluation(self, env, policy, gamma=1.0, theta=1e-10):
+    def policy_evaluation(self, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
@@ -43,20 +45,20 @@ class DP:
                     
                     # Calculated a new value function according to the policy. 
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(policy):
-                        env.create_grid(i, j)
-                        next_state, reward, done = env.step(action)
-                        x, y = env.get_current_state()
+                    for action, action_prob in enumerate(self.policy):
+                        self.env.create_grid(i, j)
+                        next_state, reward, done = self.env.step(action)
+                        x, y = self.env.get_current_state()
                         
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.V[x][y])
-                        env.reset()
+                        self.env.reset()
                     
-                    # Policy evaluation: Store computed new value function to array next_V.
+                    # Policy evaluation: Store computed new value function to self.next_V.
                     self.next_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
             
-            # Copy array next_V to the existing array V.
+            # Copy self.next_V to the existing self.V.
             self.V = self.next_V.copy()
             
             # If the delta is smaller than theta, the loop is stopped with break.
@@ -67,7 +69,7 @@ class DP:
 
         return self.next_V
     
-    def in_place_policy_evaluation(self, env, policy, gamma=1.0, theta=1e-10):
+    def in_place_policy_evaluation(self, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using only 1-array.
 
@@ -80,7 +82,6 @@ class DP:
         Returns:
             value function (np.array): The computed value function for given policy.
         '''
-        
         iter = 0
         # Repeat until the difference between the old and new value functions is less than theta.
         while True:
@@ -97,16 +98,16 @@ class DP:
                     
                     # Calculated a new value function according to the policy. 
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(policy):
-                        env.create_grid(i, j)
-                        next_state, reward, done = env.step(action)
-                        x, y = env.get_current_state()
+                    for action, action_prob in enumerate(self.policy):
+                        self.env.create_grid(i, j)
+                        next_state, reward, done = self.env.step(action)
+                        x, y = self.env.get_current_state()
                         
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.in_place_V[x][y])
-                        env.reset()
+                        self.env.reset()
                                                 
-                    # In-place policy evaluation: Update the computed new value function to array V.
+                    # In-place policy evaluation: Update the computed new value function to self.V.
                     self.in_place_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
                     
@@ -119,9 +120,10 @@ class DP:
         return self.in_place_V
 
     def policy_improvement(self):
+        V = self.in_place_policy_evaluation()
 
         return
 
-agent = DP()
-agent.policy_evaluation(env, random_policy)
-agent.in_place_policy_evaluation(env, random_policy)
+agent = DP(env, random_policy)
+agent.policy_evaluation()
+agent.in_place_policy_evaluation()
