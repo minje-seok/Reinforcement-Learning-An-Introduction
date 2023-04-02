@@ -1,10 +1,14 @@
 import numpy as np
+import random
 
 from env import grid
 from env.grid import GridEnv
 
-env = GridEnv()
-random_policy = [0.25, 0.25, 0.25, 0.25]
+row = 4
+col = 4
+env = GridEnv(row, col)
+random_policy = np.full((row, col, env.action_space), [[0.25, 0.25, 0.25, 0.25]])
+ppp = [0.25, 0.25, 0.25, 0.25]
 
 class DP:
     def __init__(self, env, policy):
@@ -14,6 +18,10 @@ class DP:
         self.next_V = self.V.copy()
 
         self.in_place_V = np.zeros((4, 4))
+
+    def choose_random_value(self, arr):
+        random_index = random.randint(0, len(arr) - 1)
+        return arr[random_index]
 
     def policy_evaluation(self, gamma=1.0, theta=1e-10):
         '''
@@ -34,6 +42,7 @@ class DP:
         while True:
             iter += 1
             delta = 0
+            print('---------------------------------------------', iter)
             for i in range(self.V.shape[0]):
                 for j in range(self.V.shape[1]):
                     # Calculate excluding start and terminal state.
@@ -42,17 +51,32 @@ class DP:
 
                     old_V = self.V[i][j]
                     new_V = 0
-                    
-                    # Calculated a new value function according to the policy. 
+
+                    # Find index of max action probability in policy.
+                    max_val = np.max(self.policy[i][j])
+                    max_indices = np.where(self.policy[i][j] == max_val)[0]
+
+                    p = [0, 0, 0, 0]
+                    # If number of max action is more than 1, choose randomly.
+                    if len(max_indices) >= 1:
+                        for i in max_indices.tolist():
+                            p[i] = 1 / int(len(max_indices))
+                    else:
+                        p[max_indices] = 1
+
+
+                    # Calculated a new value function according to the policy.
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(self.policy):
+                    for action, action_prob in enumerate(self.policy[i][j].astype(np.float64)): #
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
-                        
+
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.V[x][y])
+                        # print(reward, action, action_prob, self.V[x][y])
                         self.env.reset()
+                    # print(new_V)
                     
                     # Policy evaluation: Store computed new value function to self.next_V.
                     self.next_V[i][j] = new_V
@@ -60,7 +84,7 @@ class DP:
             
             # Copy self.next_V to the existing self.V.
             self.V = self.next_V.copy()
-            
+
             # If the delta is smaller than theta, the loop is stopped with break.
             if delta < theta:
                 print('Policy Evaluation - iter:{0}'.format(iter))
@@ -126,4 +150,4 @@ class DP:
 
 agent = DP(env, random_policy)
 agent.policy_evaluation()
-agent.in_place_policy_evaluation()
+# agent.in_place_policy_evaluation()

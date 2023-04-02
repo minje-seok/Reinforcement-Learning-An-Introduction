@@ -23,8 +23,8 @@ class GridEnv():
         action(int): top down left right (discrete). If the state in the direction of the action is blocked or at the end of the array, the position is maintained.
         reward(int): -1 when moving to any state except init state and terminal state. If the terminal state is reached, 99 is paid.
     '''
-    def __init__(self):
-        self.init_state = np.zeros((4, 4))
+    def __init__(self, row=4, col=4):
+        self.init_state = np.zeros((row, col))
         self.state = self.init_state
         self.init_action = -1
         self.action = self.init_action
