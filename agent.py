@@ -51,10 +51,14 @@ class DP:
 
                     old_V = self.V[i][j]
                     new_V = 0
+                    t = self.policy.copy()
 
-                    # Find index of max action probability in policy.
-                    max_val = np.max(self.policy[i][j])
-                    max_indices = np.where(self.policy[i][j] == max_val)[0]
+                    # # Find index of max action probability in policy.
+                    # max_val = np.max(self.policy[i][j])
+                    # max_indices = np.where(self.policy[i][j] == max_val)[0]
+
+                    max_val = np.max(t[i][j])
+                    max_indices = np.where(t[i][j] == max_val)[0]
 
                     p = [0, 0, 0, 0]
                     # If number of max action is more than 1, choose randomly.
