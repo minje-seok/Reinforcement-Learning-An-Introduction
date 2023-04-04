@@ -8,22 +8,53 @@ row = 4
 col = 4
 env = GridEnv(row, col)
 random_policy = np.full((row, col, env.action_space), [[0.25, 0.25, 0.25, 0.25]])
-ppp = [0.25, 0.25, 0.25, 0.25]
 
 class DP:
-    def __init__(self, env, policy):
+    def __init__(self, env, row, col, policy):
         self.env = env
         self.policy = policy
-        self.V = np.zeros((4, 4))
+        self.V = np.zeros((row, col))
         self.next_V = self.V.copy()
 
-        self.in_place_V = np.zeros((4, 4))
+        self.in_place_V = np.zeros((row, col))
+
+        self.Q = np.zeros((row, col, env.action_space))
+        self.action = np.zeros((row, col, 4))
+
+    def find_max_indices(self, arr):
+        max_val = np.max(arr)
+        max_indices = np.where(arr == max_val)[0]
+        return max_indices
 
     def choose_random_value(self, arr):
         random_index = random.randint(0, len(arr) - 1)
         return arr[random_index]
 
-    def policy_evaluation(self, gamma=1.0, theta=1e-10):
+    def make_policy(self, max_indices):
+        arr = [0, 0, 0, 0]
+        if len(max_indices) > 1:
+            for i in max_indices:
+                arr[i] = 1 / int(len(max_indices))
+        else:
+            arr[max_indices] = 1
+        return arr
+
+    def get_max_action(self, max_indices):
+        arr = [0, 0, 0, 0]
+        for i in max_indices:
+            arr[i] = 1
+
+        # if arr[0] == 1:
+        #     arr[0] = '∧'
+        # elif arr[1] == 1:
+        #     arr[1] = '∨'
+        # elif arr[2] == 1:
+        #     arr[2] = '〈'
+        # elif arr[3] == 1:
+        #     arr[3] = '〉'
+        return arr
+
+    def policy_evaluation(self, iter_num = 0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
@@ -32,6 +63,8 @@ class DP:
             policy (np.array): A 2D array representing the policy (same shape as env's state)
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
+            iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
+                            or iterates as many times as its value.
 
         Returns:
             value function (np.array): The computed value function for given policy.
@@ -42,7 +75,7 @@ class DP:
         while True:
             iter += 1
             delta = 0
-            print('---------------------------------------------', iter)
+            # print('---------------------------------------------', iter)
             for i in range(self.V.shape[0]):
                 for j in range(self.V.shape[1]):
                     # Calculate excluding start and terminal state.
@@ -51,37 +84,25 @@ class DP:
 
                     old_V = self.V[i][j]
                     new_V = 0
-                    t = self.policy.copy()
 
-                    # # Find index of max action probability in policy.
-                    # max_val = np.max(self.policy[i][j])
-                    # max_indices = np.where(self.policy[i][j] == max_val)[0]
-
-                    max_val = np.max(t[i][j])
-                    max_indices = np.where(t[i][j] == max_val)[0]
-
-                    p = [0, 0, 0, 0]
-                    # If number of max action is more than 1, choose randomly.
-                    if len(max_indices) >= 1:
-                        for i in max_indices.tolist():
-                            p[i] = 1 / int(len(max_indices))
-                    else:
-                        p[max_indices] = 1
-
+                    # Find current policy and index of max action.
+                    max_indices = self.find_max_indices(self.policy[i][j]).tolist()
+                    policy = self.make_policy(max_indices)
+                    max_V = self.choose_random_value(policy)
 
                     # Calculated a new value function according to the policy.
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(self.policy[i][j].astype(np.float64)): #
+                    for action, action_prob in enumerate(policy): # self.policy[i][j].astype(np.float64)
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
 
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.V[x][y])
-                        # print(reward, action, action_prob, self.V[x][y])
                         self.env.reset()
-                    # print(new_V)
-                    
+
+                    self.policy[i][j] = policy
+
                     # Policy evaluation: Store computed new value function to self.next_V.
                     self.next_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
@@ -90,14 +111,14 @@ class DP:
             self.V = self.next_V.copy()
 
             # If the delta is smaller than theta, the loop is stopped with break.
-            if delta < theta:
+            if delta < theta or iter == iter_num:
                 print('Policy Evaluation - iter:{0}'.format(iter))
                 print(self.next_V, '\n')
                 break
 
         return self.next_V
     
-    def in_place_policy_evaluation(self, gamma=1.0, theta=1e-10):
+    def in_place_policy_evaluation(self, iter_num = 0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using only 1-array.
 
@@ -106,10 +127,13 @@ class DP:
             policy (np.array): A 2D array representing the policy (same shape as env's state)
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
+            iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
+                            or iterates as many times as its value.
 
         Returns:
             value function (np.array): The computed value function for given policy.
         '''
+
         iter = 0
         # Repeat until the difference between the old and new value functions is less than theta.
         while True:
@@ -123,10 +147,15 @@ class DP:
 
                     old_V = self.in_place_V[i][j]
                     new_V = 0
-                    
+
+                    # Find current policy and index of max action.
+                    max_indices = self.find_max_indices(self.policy[i][j]).tolist()
+                    policy = self.make_policy(max_indices)
+                    max_V = self.choose_random_value(policy)
+
                     # Calculated a new value function according to the policy. 
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(self.policy):
+                    for action, action_prob in enumerate(policy):
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
@@ -134,24 +163,57 @@ class DP:
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.in_place_V[x][y])
                         self.env.reset()
-                                                
+
+                    self.policy[i][j] = policy
+
                     # In-place policy evaluation: Update the computed new value function to self.V.
                     self.in_place_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
                     
             # If the delta is smaller than theta, the loop is stopped with break.
-            if delta < theta:
+            if delta < theta or iter == iter_num:
                 print('Policy Evaluation(in-place) - iter:{0}'.format(iter))
                 print(self.in_place_V, '\n')
                 break
 
         return self.in_place_V
 
-    def policy_improvement(self):
-        V = self.in_place_policy_evaluation()
+    def greedy_policy_improvement(self, iter_num = 0, gamma=1.0):
+        self.policy_evaluation(iter_num)
 
-        return
+        for i in range(self.in_place_V.shape[0]):
+            for j in range(self.in_place_V.shape[1]):
+                # Calculate excluding start and terminal state.
+                if (i == 0 and j == 0) or (i == 3 and j == 3):
+                    continue
 
-agent = DP(env, random_policy)
-agent.policy_evaluation()
-# agent.in_place_policy_evaluation()
+                # Find current policy and index of max action.
+                max_indices = self.find_max_indices(self.policy[i][j]).tolist()
+                policy = self.make_policy(max_indices)
+                max_V = self.choose_random_value(policy)
+
+                # Calculated a new value function according to the policy.
+                # At GridEnv, policy is equiprobable random policy (all actions equally likely).
+                Q = []
+                for action, action_prob in enumerate(policy):
+                    self.env.create_grid(i, j)
+                    next_state, reward, done = self.env.step(action)
+                    x, y = self.env.get_current_state()
+
+                    # action probability * (immediate reward + discount factor * next state's value function)
+                    Q.append(round(reward + gamma * self.in_place_V[x][y]))
+                    self.env.reset()
+
+                self.Q[i][j] = Q
+                max_Q_indices = self.find_max_indices(self.Q[i][j]).tolist()
+                self.action[i][j] = self.get_max_action(max_Q_indices)
+                # self.policy[i][j] = policy
+
+
+        print(self.action)
+        return self.action
+
+agent = DP(env, row, col, random_policy)
+agent.policy_evaluation(2)
+agent.in_place_policy_evaluation()
+agent.greedy_policy_improvement(0)
