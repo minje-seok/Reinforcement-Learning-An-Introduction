@@ -12,14 +12,16 @@ random_policy = np.full((row, col, env.action_space), [[0.25, 0.25, 0.25, 0.25]]
 class DP:
     def __init__(self, env, row, col, policy):
         self.env = env
+        self.row = row
+        self.col = col
         self.policy = policy
-        self.V = np.zeros((row, col))
+        self.V = np.zeros((self.row, self.col))
         self.next_V = self.V.copy()
 
-        self.in_place_V = np.zeros((row, col))
+        self.in_place_V = np.zeros((self.row, self.col))
 
-        self.Q = np.zeros((row, col, env.action_space))
-        self.action = np.zeros((row, col, 4))
+        self.Q = np.zeros((self.row, self.col, env.action_space))
+        self.action = np.zeros((self.row, self.col, 4))
 
     def find_max_indices(self, arr):
         max_val = np.max(arr)
@@ -40,21 +42,42 @@ class DP:
         return arr
 
     def get_max_action(self, max_indices):
-        arr = [0, 0, 0, 0]
+        idx_arr = [0, 0, 0, 0]
         for i in max_indices:
-            arr[i] = 1
+            idx_arr[i] = 1
+        return idx_arr
 
-        # if arr[0] == 1:
-        #     arr[0] = '∧'
-        # elif arr[1] == 1:
-        #     arr[1] = '∨'
-        # elif arr[2] == 1:
-        #     arr[2] = '〈'
-        # elif arr[3] == 1:
-        #     arr[3] = '〉'
-        return arr
+    def show_max_action(self, action):
+        shape = (self.row, self.col, 1)
+        action_arr = np.zeros(shape).tolist()
 
-    def policy_evaluation(self, iter_num = 0, gamma=1.0, theta=1e-10):
+        for i in range(self.row):
+            for j in range(self.col):
+                if action[i][j][0] == 1:
+                    if action_arr[i][j][0] == 0:
+                        action_arr[i][j][0] = 'Up'
+                    else:
+                        action_arr[i][j].insert(-1, 'Up')
+                if action[i][j][1] == 1:
+                    if action_arr[i][j][0] == 0:
+                        action_arr[i][j][0] = 'Down'
+                    else:
+                        action_arr[i][j].insert(-1, 'Down')
+                if action[i][j][2] == 1:
+                    if action_arr[i][j][0] == 0:
+                        action_arr[i][j][0] = 'Left'
+                    else:
+                        action_arr[i][j].insert(-1, 'Left')
+                if action[i][j][3] == 1:
+                    if action_arr[i][j][0] == 0:
+                        action_arr[i][j][0] = 'Right'
+                    else:
+                        action_arr[i][j].insert(-1, 'Right')
+
+        for i in range(len(action_arr)):
+            print(action_arr[i])
+
+    def policy_evaluation(self, iter_num=0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
@@ -118,7 +141,7 @@ class DP:
 
         return self.next_V
     
-    def in_place_policy_evaluation(self, iter_num = 0, gamma=1.0, theta=1e-10):
+    def in_place_policy_evaluation(self, iter_num=0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using only 1-array.
 
@@ -178,7 +201,7 @@ class DP:
 
         return self.in_place_V
 
-    def greedy_policy_improvement(self, iter_num = 0, gamma=1.0):
+    def greedy_policy_improvement(self, iter_num=0, gamma=1.0):
         self.policy_evaluation(iter_num)
 
         for i in range(self.in_place_V.shape[0]):
@@ -209,9 +232,10 @@ class DP:
                 self.action[i][j] = self.get_max_action(max_Q_indices)
                 # self.policy[i][j] = policy
 
+        self.show_max_action(self.action)
 
-        print(self.action)
         return self.action
+
 
 agent = DP(env, row, col, random_policy)
 agent.policy_evaluation(2)
