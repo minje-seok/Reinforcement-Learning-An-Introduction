@@ -139,7 +139,7 @@ class DP:
                 print(self.next_V, '\n')
                 break
 
-        return self.next_V
+        return self.V
     
     def in_place_policy_evaluation(self, iter_num=0, gamma=1.0, theta=1e-10):
         '''
@@ -201,11 +201,9 @@ class DP:
 
         return self.in_place_V
 
-    def greedy_policy_improvement(self, iter_num=0, gamma=1.0):
-        self.policy_evaluation(iter_num)
-
-        for i in range(self.in_place_V.shape[0]):
-            for j in range(self.in_place_V.shape[1]):
+    def greedy_policy_improvement(self, gamma=1.0):
+        for i in range(self.V.shape[0]):
+            for j in range(self.V.shape[1]):
                 # Calculate excluding start and terminal state.
                 if (i == 0 and j == 0) or (i == 3 and j == 3):
                     continue
@@ -224,7 +222,7 @@ class DP:
                     x, y = self.env.get_current_state()
 
                     # action probability * (immediate reward + discount factor * next state's value function)
-                    Q.append(round(reward + gamma * self.in_place_V[x][y]))
+                    Q.append(round(reward + gamma * self.V[x][y]))
                     self.env.reset()
 
                 self.Q[i][j] = Q
@@ -238,6 +236,5 @@ class DP:
 
 
 agent = DP(env, row, col, random_policy)
-agent.policy_evaluation(2)
-agent.in_place_policy_evaluation()
-agent.greedy_policy_improvement(0)
+agent.policy_evaluation()
+agent.greedy_policy_improvement()
