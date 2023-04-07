@@ -8,6 +8,8 @@ row = 4
 col = 4
 env = GridEnv(row, col)
 random_policy = np.full((row, col, env.action_space), [[0.25, 0.25, 0.25, 0.25]])
+random_policy[0][0] = [0, 0, 0, 0]
+random_policy[-1][-1] = [0, 0, 0, 0]
 
 class DP:
     def __init__(self, env, row, col, policy):
@@ -21,7 +23,6 @@ class DP:
         self.in_place_V = np.zeros((self.row, self.col))
 
         self.Q = np.zeros((self.row, self.col, env.action_space))
-        self.action = np.zeros((self.row, self.col, 4))
 
     def find_max_indices(self, arr):
         max_val = np.max(arr)
@@ -38,44 +39,31 @@ class DP:
             for i in max_indices:
                 arr[i] = 1 / int(len(max_indices))
         else:
-            arr[max_indices] = 1
+            arr[max_indices[0]] = 1
         return arr
 
-    def get_max_action(self, max_indices):
-        idx_arr = [0, 0, 0, 0]
-        for i in max_indices:
-            idx_arr[i] = 1
-        return idx_arr
-
-    def show_max_action(self, action):
+    def show_updated_policy(self, policy):
         shape = (self.row, self.col, 1)
-        action_arr = np.zeros(shape).tolist()
+        arr = np.zeros(shape).tolist()
 
         for i in range(self.row):
             for j in range(self.col):
-                if action[i][j][0] == 1:
-                    if action_arr[i][j][0] == 0:
-                        action_arr[i][j][0] = 'Up'
-                    else:
-                        action_arr[i][j].insert(-1, 'Up')
-                if action[i][j][1] == 1:
-                    if action_arr[i][j][0] == 0:
-                        action_arr[i][j][0] = 'Down'
-                    else:
-                        action_arr[i][j].insert(-1, 'Down')
-                if action[i][j][2] == 1:
-                    if action_arr[i][j][0] == 0:
-                        action_arr[i][j][0] = 'Left'
-                    else:
-                        action_arr[i][j].insert(-1, 'Left')
-                if action[i][j][3] == 1:
-                    if action_arr[i][j][0] == 0:
-                        action_arr[i][j][0] = 'Right'
-                    else:
-                        action_arr[i][j].insert(-1, 'Right')
+                if (i == 0 and j == 0) or (i == env.action_space - 1 and j == env.action_space - 1):
+                    continue
 
-        for i in range(len(action_arr)):
-            print(action_arr[i])
+                if policy[i][j][0] != 0:
+                    arr[i][j].insert(-1, 'Up')
+                if policy[i][j][1] != 0:
+                    arr[i][j].insert(-1, 'Down')
+                if policy[i][j][2] != 0:
+                    arr[i][j].insert(-1, 'Left')
+                if policy[i][j][3] != 0:
+                    arr[i][j].insert(-1, 'Right')
+
+                arr[i][j].remove(0)
+
+        for i in range(len(arr)):
+            print(arr[i])
 
     def policy_evaluation(self, iter_num=0, gamma=1.0, theta=1e-10):
         '''
@@ -108,14 +96,9 @@ class DP:
                     old_V = self.V[i][j]
                     new_V = 0
 
-                    # Find current policy and index of max action.
-                    max_indices = self.find_max_indices(self.policy[i][j]).tolist()
-                    policy = self.make_policy(max_indices)
-                    max_V = self.choose_random_value(policy)
-
                     # Calculated a new value function according to the policy.
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(policy): # self.policy[i][j].astype(np.float64)
+                    for action, action_prob in enumerate(self.policy[i][j]): # self.policy[i][j].astype(np.float64)
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
@@ -123,8 +106,6 @@ class DP:
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.V[x][y])
                         self.env.reset()
-
-                    self.policy[i][j] = policy
 
                     # Policy evaluation: Store computed new value function to self.next_V.
                     self.next_V[i][j] = new_V
@@ -171,14 +152,9 @@ class DP:
                     old_V = self.in_place_V[i][j]
                     new_V = 0
 
-                    # Find current policy and index of max action.
-                    max_indices = self.find_max_indices(self.policy[i][j]).tolist()
-                    policy = self.make_policy(max_indices)
-                    max_V = self.choose_random_value(policy)
-
                     # Calculated a new value function according to the policy. 
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
-                    for action, action_prob in enumerate(policy):
+                    for action, action_prob in enumerate(self.policy[i][j]):
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
@@ -186,8 +162,6 @@ class DP:
                         # action probability * (immediate reward + discount factor * next state's value function)
                         new_V += action_prob * (reward + gamma * self.in_place_V[x][y])
                         self.env.reset()
-
-                    self.policy[i][j] = policy
 
                     # In-place policy evaluation: Update the computed new value function to self.V.
                     self.in_place_V[i][j] = new_V
@@ -208,32 +182,30 @@ class DP:
                 if (i == 0 and j == 0) or (i == 3 and j == 3):
                     continue
 
-                # Find current policy and index of max action.
-                max_indices = self.find_max_indices(self.policy[i][j]).tolist()
-                policy = self.make_policy(max_indices)
-                max_V = self.choose_random_value(policy)
-
-                # Calculated a new value function according to the policy.
-                # At GridEnv, policy is equiprobable random policy (all actions equally likely).
+                # Calculate action-value function according to the policy.
                 Q = []
-                for action, action_prob in enumerate(policy):
+                for action, action_prob in enumerate(self.policy[i][j]):
                     self.env.create_grid(i, j)
                     next_state, reward, done = self.env.step(action)
                     x, y = self.env.get_current_state()
 
-                    # action probability * (immediate reward + discount factor * next state's value function)
+                    # action-value function = immediate reward + discount factor * next state's value function
                     Q.append(round(reward + gamma * self.V[x][y]))
                     self.env.reset()
 
                 self.Q[i][j] = Q
+
+                # Update greedy policy according to calculated self.Q.
                 max_Q_indices = self.find_max_indices(self.Q[i][j]).tolist()
-                self.action[i][j] = self.get_max_action(max_Q_indices)
-                # self.policy[i][j] = policy
+                self.policy[i][j] = self.make_policy(max_Q_indices)
 
-        self.show_max_action(self.action)
+        self.show_updated_policy(self.policy)
 
-        return self.action
-
+    def value_iteration(self):
+        # Find current policy and index of max action.
+        max_indices = self.find_max_indices(self.policy[i][j]).tolist()
+        policy = self.make_policy(max_indices)
+        max_V = self.choose_random_value(policy)
 
 agent = DP(env, row, col, random_policy)
 agent.policy_evaluation()
