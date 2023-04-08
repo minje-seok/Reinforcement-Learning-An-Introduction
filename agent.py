@@ -82,6 +82,7 @@ class DP:
         '''
 
         iter = 0
+        
         # Repeat until the difference between the old and new value functions is less than theta.
         while True:
             iter += 1
@@ -139,6 +140,7 @@ class DP:
         '''
 
         iter = 0
+        
         # Repeat until the difference between the old and new value functions is less than theta.
         while True:
             iter += 1
@@ -163,7 +165,7 @@ class DP:
                         new_V += action_prob * (reward + gamma * self.in_place_V[x][y])
                         self.env.reset()
 
-                    # In-place policy evaluation: Update the computed new value function to self.V.
+                    # In-place policy evaluation: Update the computed new value function to self.in_place_V.
                     self.in_place_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
                     
@@ -175,7 +177,13 @@ class DP:
 
         return self.in_place_V
 
-    def greedy_policy_improvement(self, gamma=1.0):
+    def greedy_policy_improvement(self):
+        '''
+        Perform greedy policy improvement to choose the best action-value function for a given policy and update policy.
+
+        Returns:
+            policy (np.array): A policy that contains a probability value for the max action value..
+        '''
         for i in range(self.V.shape[0]):
             for j in range(self.V.shape[1]):
                 # Calculate excluding start and terminal state.
@@ -200,6 +208,8 @@ class DP:
                 self.policy[i][j] = self.make_policy(max_Q_indices)
 
         self.show_updated_policy(self.policy)
+        
+        return self.policy
 
     def value_iteration(self):
         # Find current policy and index of max action.
