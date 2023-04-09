@@ -24,6 +24,7 @@ class DP:
 
         self.Q = np.zeros((self.row, self.col, env.action_space))
 
+
     def find_max_indices(self, arr):
         max_val = np.max(arr)
         max_indices = np.where(arr == max_val)[0]
@@ -52,20 +53,21 @@ class DP:
                     continue
 
                 if policy[i][j][0] != 0:
-                    arr[i][j].insert(-1, 'Up')
+                    arr[i][j].insert(-1, '∧')
                 if policy[i][j][1] != 0:
-                    arr[i][j].insert(-1, 'Down')
+                    arr[i][j].insert(-1, '∨')
                 if policy[i][j][2] != 0:
-                    arr[i][j].insert(-1, 'Left')
+                    arr[i][j].insert(-1, '<')
                 if policy[i][j][3] != 0:
-                    arr[i][j].insert(-1, 'Right')
+                    arr[i][j].insert(-1, '>')
 
                 arr[i][j].remove(0)
 
         for i in range(len(arr)):
             print(arr[i])
 
-    def policy_evaluation(self, iter_num=0, gamma=1.0, theta=1e-10):
+
+    def policy_evaluation(self, update = 0, iter_num=0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
@@ -87,7 +89,6 @@ class DP:
         while True:
             iter += 1
             delta = 0
-            # print('---------------------------------------------', iter)
             for i in range(self.V.shape[0]):
                 for j in range(self.V.shape[1]):
                     # Calculate excluding start and terminal state.
@@ -96,6 +97,9 @@ class DP:
 
                     old_V = self.V[i][j]
                     new_V = 0
+
+                    if update == 0:
+                        self.policy[i][j] = [0.25, 0.25, 0.25, 0.25]
 
                     # Calculated a new value function according to the policy.
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely).
@@ -117,7 +121,7 @@ class DP:
 
             # If the delta is smaller than theta, the loop is stopped with break.
             if delta < theta or iter == iter_num:
-                print('Policy Evaluation - iter:{0}'.format(iter))
+                print('Policy Evaluation - iter: {0}'.format(iter))
                 print(self.next_V, '\n')
                 break
 
@@ -171,13 +175,13 @@ class DP:
                     
             # If the delta is smaller than theta, the loop is stopped with break.
             if delta < theta or iter == iter_num:
-                print('Policy Evaluation(in-place) - iter:{0}'.format(iter))
+                print('Policy Evaluation(in-place) - iter: {0}'.format(iter))
                 print(self.in_place_V, '\n')
                 break
 
         return self.in_place_V
 
-    def greedy_policy_improvement(self):
+    def greedy_policy_improvement(self, gamma=1.0):
         '''
         Perform greedy policy improvement to choose the best action-value function for a given policy and update policy.
 
@@ -198,7 +202,7 @@ class DP:
                     x, y = self.env.get_current_state()
 
                     # action-value function = immediate reward + discount factor * next state's value function
-                    Q.append(round(reward + gamma * self.V[x][y]))
+                    Q.append(reward + gamma * self.V[x][y])
                     self.env.reset()
 
                 self.Q[i][j] = Q
@@ -207,9 +211,32 @@ class DP:
                 max_Q_indices = self.find_max_indices(self.Q[i][j]).tolist()
                 self.policy[i][j] = self.make_policy(max_Q_indices)
 
+        print('Greedy Policy Improvement')
         self.show_updated_policy(self.policy)
         
         return self.policy
+
+
+    def policy_iteration(self, num=3):
+        iter = 0
+        no_change = 0
+
+        while True:
+            iter += 1
+            past_policy = self.policy.copy()
+
+            print('*** Policy Iteration - iter: {0} ***'.format(iter))
+            self.policy_evaluation(update=0, iter_num=1)
+            self.greedy_policy_improvement()
+
+            if np.array_equal(past_policy, self.policy):
+                no_change += 1
+                print('no_change: {0}\n\n'.format(no_change))
+            else:
+                print('\n')
+
+            if no_change == num:
+                break
 
     def value_iteration(self):
         # Find current policy and index of max action.
@@ -218,5 +245,6 @@ class DP:
         max_V = self.choose_random_value(policy)
 
 agent = DP(env, row, col, random_policy)
-agent.policy_evaluation()
-agent.greedy_policy_improvement()
+# agent.policy_evaluation()
+# agent.greedy_policy_improvement()
+agent.policy_iteration()
