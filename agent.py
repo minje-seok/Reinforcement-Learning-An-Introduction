@@ -89,7 +89,6 @@ class DP:
         while True:
             iter += 1
             delta = 0
-            # print('---------------------------------------------', iter)
             for i in range(self.V.shape[0]):
                 for j in range(self.V.shape[1]):
                     # Calculate excluding start and terminal state.
@@ -182,7 +181,7 @@ class DP:
 
         return self.in_place_V
 
-    def greedy_policy_improvement(self):
+    def greedy_policy_improvement(self, gamma=1.0):
         '''
         Perform greedy policy improvement to choose the best action-value function for a given policy and update policy.
 
@@ -217,7 +216,10 @@ class DP:
         
         return self.policy
 
+<<<<<<< HEAD
         return self.policy
+=======
+>>>>>>> 39d070e4a64daa410a3c03ba2ac0537b3185774e
 
     def policy_iteration(self, num=3):
         iter = 0
@@ -249,4 +251,8 @@ class DP:
 agent = DP(env, row, col, random_policy)
 # agent.policy_evaluation()
 # agent.greedy_policy_improvement()
+<<<<<<< HEAD
 agent.policy_iteration()
+=======
+agent.policy_iteration()
+>>>>>>> 39d070e4a64daa410a3c03ba2ac0537b3185774e
