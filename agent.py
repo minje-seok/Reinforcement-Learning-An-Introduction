@@ -216,11 +216,6 @@ class DP:
         
         return self.policy
 
-<<<<<<< HEAD
-        return self.policy
-=======
->>>>>>> 39d070e4a64daa410a3c03ba2ac0537b3185774e
-
     def policy_iteration(self, num=3):
         iter = 0
         no_change = 0
@@ -251,8 +246,5 @@ class DP:
 agent = DP(env, row, col, random_policy)
 # agent.policy_evaluation()
 # agent.greedy_policy_improvement()
-<<<<<<< HEAD
 agent.policy_iteration()
-=======
 agent.policy_iteration()
->>>>>>> 39d070e4a64daa410a3c03ba2ac0537b3185774e
