@@ -66,7 +66,7 @@ class DP:
             print(arr[i])
 
 
-    def policy_evaluation(self, update = 0, iter_num=0, gamma=1.0, theta=1e-10):
+    def policy_evaluation(self, update=0, iter_num=0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
@@ -129,7 +129,7 @@ class DP:
         Perform policy evaluation to compute the value function for a given policy using only 1-array.
 
         Args:
-            update (int):  The flag, to apply rando policy everytime if 0, otherwise apply policy after policy improvement.
+            update (int):  The flag, to apply random policy everytime if 0, otherwise apply policy after policy improvement.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
             iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
@@ -225,6 +225,7 @@ class DP:
 
         Args:
              num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
+
         '''
         iter = 0
         no_change = 0
@@ -239,7 +240,7 @@ class DP:
             self.policy_evaluation(update=0, iter_num=1)
             self.greedy_policy_improvement()
 
-            # Compare policy and past policy
+            # Compare current policy and past policy
             if np.array_equal(past_policy, self.policy):
                 # if policy doesn't change, it is same as past policy
                 no_change += 1
@@ -250,10 +251,14 @@ class DP:
             if no_change == num:
                 break
 
-    def value_iteration(self, gamma=1, num=3):
+    def value_iteration(self, update=0, gamma=1, num=3):
         '''
 
+        Args:
+
+
         return:
+
         '''
 
         iter = 0
@@ -272,20 +277,20 @@ class DP:
 
                     new_V = []
 
-                    # Calculated a new value function according to the policy
+                    # Calculated a new max value function according to the policy
                     # At GridEnv, policy is equiprobable random policy (all actions equally likely)
                     for action, action_prob in enumerate(self.policy[i][j]):
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
 
-                        # action probability * (immediate reward + discount factor * next state's value function)
+                        # action-value function = immediate reward + discount factor * next state's value function
                         new_V.append((reward + gamma * self.max_V[x][y]))
                         self.env.reset()
 
                     self.next_max_V[i][j] = np.max(new_V)
 
-            # Compare policy and past policy
+            # Compare current state-value and past state-value
             if np.array_equal(self.max_V, self.next_max_V):
                 #
                 no_change += 1
@@ -298,10 +303,27 @@ class DP:
             if no_change == num:
                 break
 
-            # Copy self.next_V to the existing self.V
+            # Copy self.next_max_V to the existing self.max_V
             self.max_V = self.next_max_V.copy()
 
         return self.max_V
+
+    def asynchronous_DP(self, gamma=1, num=3):
+        '''
+        Perform asynchronous DP,
+
+        Args:
+            update (int):  The flag, to apply random policy everytime if 0, otherwise apply policy after policy improvement.
+            gamma (float): The discount factor, should be between 0 and 1.
+            num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
+
+        :return:
+
+        '''
+        iter = 0
+        no_change = 0
+
+
 
 
 agent = DP(env, row, col, random_policy)
