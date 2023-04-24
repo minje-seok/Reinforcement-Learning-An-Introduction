@@ -317,7 +317,7 @@ class DP:
             gamma (float): The discount factor, should be between 0 and 1.
             num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
 
-        :return:
+        return:
 
         '''
         iter = 0
