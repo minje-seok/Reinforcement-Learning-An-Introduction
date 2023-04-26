@@ -32,6 +32,7 @@ class DP:
         self.max_V = np.zeros((self.row, self.col))
         self.next_max_V = np.zeros((self.row, self.col))
 
+        self.tmp_policy = self.policy.copy
         self.tmp_V = np.zeros((self.row, self.col))
 
     # Find the index of max value in array
@@ -232,7 +233,7 @@ class DP:
         
         return self.policy
 
-    def policy_iteration(self, num=3):
+    def policy_iteration(self, iter_num=1, update=0, show_policy=1, num=3):
         '''
         Perform policy iteration until convergence of policy improvement.
 
@@ -252,17 +253,21 @@ class DP:
 
             # Execute policy evaluation and policy improvement
             print('----- Policy Iteration - iter: {0} -----'.format(iter))
-            self.policy_evaluation(update=1, iter_num=iter)
-            self.greedy_policy_improvement(show_policy=0)
+            self.policy_evaluation(update=update, iter_num=iter_num)
+            self.greedy_policy_improvement(show_policy=show_policy)
+            print('')
 
             # Compare current policy and past policy
             if np.array_equal(past_policy, self.policy):
-                # if policy doesn't change, it is same as past policy
-                no_change += 1
-                print('* There are no change for {0} times'.format(no_change))
-                print('\n')
+                if np.array_equal(past_policy, self.tmp_policy):
+                    # if policy doesn't change, it is same as past policy
+                    no_change += 1
+                    print('* There are no change for {0} times\n'.format(no_change))
             else:
-                print('\n')
+                no_change = 0
+                print('')
+
+            self.tmp_policy = self.policy.copy()
 
             if no_change == num:
                 break
@@ -354,5 +359,5 @@ agent = DP(env, row, col, random_policy)
 # agent.in_place_policy_evaluation(update=0, iter_num=0) # iter 272
 # agent.greedy_policy_improvement(show_policy=1)
 
-agent.policy_iteration()
+agent.policy_iteration(iter_num=1, update=1, show_policy=1)
 # agent.value_iteration()
