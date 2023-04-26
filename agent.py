@@ -32,6 +32,8 @@ class DP:
         self.max_V = np.zeros((self.row, self.col))
         self.next_max_V = np.zeros((self.row, self.col))
 
+        self.tmp_V = np.zeros((self.row, self.col))
+
     # Find the index of max value in array
     def find_max_indices(self, arr):
         max_val = np.max(arr)
@@ -309,12 +311,18 @@ class DP:
 
             # Compare current state-value and past state-value
             if np.array_equal(self.max_V, self.next_max_V):
-                no_change += 1
-                print('* There are no change for {0} times'.format(no_change))
-                print(self.next_max_V)
-                print('\n')
-            else:
                 print(self.next_max_V, '\n')
+
+                if np.array_equal(self.max_V, self.tmp_V):
+                    no_change += 1
+                    print('* There are no change for {0} times'.format(no_change))
+                    print('\n')
+            else:
+                no_change = 0
+                print(self.next_max_V, '\n')
+
+            # Copy self.tmp_V for comparison with previous iteration
+            self.tmp_V = self.next_max_V.copy()
 
             # Break when no_change equals num
             if no_change == num:
