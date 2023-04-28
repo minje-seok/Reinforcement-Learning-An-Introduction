@@ -33,7 +33,6 @@ class DP:
         self.next_max_V = np.zeros((self.row, self.col))
 
         self.tmp_policy = self.policy.copy
-        self.tmp_V = np.zeros((self.row, self.col))
 
     # Find the index of max value in array
     def find_max_indices(self, arr):
@@ -76,12 +75,12 @@ class DP:
             print(arr[i])
 
 
-    def policy_evaluation(self, update=0, iter_num=0, gamma=1.0, theta=1e-10):
+    def policy_evaluation(self, update=False, iter_num=0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
         Args:
-            update (int):  The flag, to apply rando policy everytime if 0, otherwise apply policy after policy improvement.
+            update (bool):  The flag, to apply rando policy everytime if 0, otherwise apply policy after policy improvement.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
             iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
@@ -107,7 +106,7 @@ class DP:
                     new_V = 0
 
                     # If the policy is not updated and keep equiprobable random
-                    if update == 0:
+                    if update == False:
                         self.policy[i][j] = [0.25, 0.25, 0.25, 0.25]
 
                     # Calculated a new value function according to the policy
@@ -134,12 +133,12 @@ class DP:
             self.V = self.next_V.copy()
         return self.V
     
-    def in_place_policy_evaluation(self, update=0, iter_num=0, gamma=1.0, theta=1e-10):
+    def in_place_policy_evaluation(self, update=False, iter_num=0, gamma=1.0, theta=1e-10):
         '''
         Perform policy evaluation to compute the value function for a given policy using only 1-array.
 
         Args:
-            update (int):  The flag, to apply random policy everytime if 0, otherwise apply policy after policy improvement.
+            update (bool):  The flag, to apply random policy everytime if 0, otherwise apply policy after policy improvement.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
             iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
@@ -165,7 +164,7 @@ class DP:
                     new_V = 0
 
                     # If the policy is not updated and keep equiprobable random
-                    if update == 0:
+                    if update == False:
                         self.policy[i][j] = [0.25, 0.25, 0.25, 0.25]
 
                     # Calculated a new value function according to the policy
@@ -192,11 +191,12 @@ class DP:
 
         return self.in_place_V
 
-    def greedy_policy_improvement(self, show_policy=0, gamma=1.0):
+    def greedy_policy_improvement(self, in_place=False, show_policy=True, gamma=1.0):
         '''
         Perform greedy policy improvement to choose the best action-value function for a given policy and update policy.
 
         Args:
+            in_place (bool): Determines whether policy evaluation is in_place method.
             show_policy (int): Determines whether to show policy indicated by arrows.
             gamma (float): The discount factor, should be between 0 and 1.
 
@@ -217,7 +217,11 @@ class DP:
                     x, y = self.env.get_current_state()
 
                     # action-value function = immediate reward + discount factor * next state-value function
-                    Q.append(reward + gamma * self.V[x][y])
+                    if in_place == True:
+                        Q.append(reward + gamma * self.in_place_V[x][y])
+                    else:
+                        Q.append(reward + gamma * self.V[x][y])
+
                     self.env.reset()
 
                 self.Q[i][j] = Q
@@ -233,12 +237,14 @@ class DP:
         
         return self.policy
 
-    def policy_iteration(self, iter_num=1, update=0, show_policy=1, num=3):
+    def policy_iteration(self, evaluation_num, update=False, show_policy=1, converge_num=3):
         '''
         Perform policy iteration until convergence of policy improvement.
 
         Args:
-             num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
+            evaluation_num (int):
+             update (bool):  The flag, to apply rando policy everytime if 0, otherwise apply policy after policy improvement.
+             converge_num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
 
         Returns:
             value function (np.array): The computed value function for given policy.
@@ -253,33 +259,32 @@ class DP:
 
             # Execute policy evaluation and policy improvement
             print('----- Policy Iteration - iter: {0} -----'.format(iter))
-            self.policy_evaluation(update=update, iter_num=iter_num)
+            self.policy_evaluation(update=update, iter_num=(iter if not update else evaluation_num))
             self.greedy_policy_improvement(show_policy=show_policy)
             print('')
 
             # Compare current policy and past policy
             if np.array_equal(past_policy, self.policy):
-                if np.array_equal(past_policy, self.tmp_policy):
-                    # if policy doesn't change, it is same as past policy
-                    no_change += 1
-                    print('* There are no change for {0} times\n'.format(no_change))
+                # if np.array_equal(past_policy, self.tmp_policy):
+                no_change += 1
+                print('* There are no change at policy for {0} times\n'.format(no_change))
             else:
                 no_change = 0
                 print('')
 
-            self.tmp_policy = self.policy.copy()
+            # self.tmp_policy = past_policy
 
-            if no_change == num:
+            if no_change == converge_num:
                 break
 
         return self.V
 
-    def value_iteration(self, num=3, gamma=1):
+    def value_iteration(self, converge_num=3, gamma=1):
         '''
         Perform value iteration until the value function converges.
 
         Args:
-             num (int): The convergence threshold, the number of iterations that no longer change.
+             converge_num (int): The convergence threshold, the number of iterations that no longer change.
 
         return:
             value function (np.array): The computed value function for given policy.
@@ -317,20 +322,15 @@ class DP:
             # Compare current state-value and past state-value
             if np.array_equal(self.max_V, self.next_max_V):
                 print(self.next_max_V, '\n')
-
-                if np.array_equal(self.max_V, self.tmp_V):
-                    no_change += 1
-                    print('* There are no change for {0} times'.format(no_change))
-                    print('\n')
+                no_change += 1
+                print('* There are no change at value function for {0} times'.format(no_change))
+                print('\n')
             else:
                 no_change = 0
                 print(self.next_max_V, '\n')
 
-            # Copy self.tmp_V for comparison with previous iteration
-            self.tmp_V = self.next_max_V.copy()
-
             # Break when no_change equals num
-            if no_change == num:
+            if no_change == converge_num:
                 break
 
             # Copy self.next_V to self.V which means that the state value-function is updated
@@ -338,26 +338,11 @@ class DP:
 
         return self.max_V
 
-    def asynchronous_DP(self, gamma=1, num=3):
-        '''
-        Perform asynchronous DP,
-
-        Args:
-            update (int):  The flag, to apply random policy everytime if 0, otherwise apply policy after policy improvement.
-            gamma (float): The discount factor, should be between 0 and 1.
-            num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
-
-        return:
-
-        '''
-        iter = 0
-        no_change = 0
-
 
 agent = DP(env, row, col, random_policy)
-# agent.policy_evaluation(update=0, iter_num=0) # iter 426
-# agent.in_place_policy_evaluation(update=0, iter_num=0) # iter 272
-# agent.greedy_policy_improvement(show_policy=1)
+# agent.policy_evaluation(iter_num=0) # converge at iter 426
+# agent.in_place_policy_evaluation(iter_num=0) # converge at iter 272
+# agent.greedy_policy_improvement(in_place=False)
 
-agent.policy_iteration(iter_num=1, update=1, show_policy=1)
+agent.policy_iteration(update=True, evaluation_num=0) # policy converges at iter 3
 # agent.value_iteration()
