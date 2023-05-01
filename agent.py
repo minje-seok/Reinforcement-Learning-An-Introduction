@@ -32,8 +32,6 @@ class DP:
         self.max_V = np.zeros((self.row, self.col))
         self.next_max_V = np.zeros((self.row, self.col))
 
-        self.tmp_policy = self.policy.copy
-
     # Find the index of max value in array
     def find_max_indices(self, arr):
         max_val = np.max(arr)
@@ -71,7 +69,7 @@ class DP:
 
                 arr[i][j].remove(0)
 
-        for i in range(len(arr)):
+        for i in range(self.row):
             print(arr[i])
 
 
@@ -80,7 +78,7 @@ class DP:
         Perform policy evaluation to compute the value function for a given policy using 1-array.
 
         Args:
-            update (bool):  The flag, to apply rando policy everytime if 0, otherwise apply policy after policy improvement.
+            update (bool):  The flag, to apply random policy everytime if 0, otherwise apply improved policy.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
             iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
@@ -98,18 +96,18 @@ class DP:
             delta = 0
             for i in range(self.V.shape[0]):
                 for j in range(self.V.shape[1]):
-                    # Calculate excluding start and terminal state
+                    # Exclude calculating start and terminal state
                     if (i == 0 and j == 0) or (i == 3 and j == 3):
                         continue
 
                     old_V = self.V[i][j]
                     new_V = 0
 
-                    # If the policy is not updated and keep equiprobable random
+                    # If the policy is not updating, then keep equiprobable random
                     if update == False:
                         self.policy[i][j] = [0.25, 0.25, 0.25, 0.25]
 
-                    # Calculated a new value function according to the policy
+                    # Calculate a new value function according to the policy
                     for action, action_prob in enumerate(self.policy[i][j]):
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
@@ -138,7 +136,7 @@ class DP:
         Perform policy evaluation to compute the value function for a given policy using only 1-array.
 
         Args:
-            update (bool):  The flag, to apply random policy everytime if 0, otherwise apply policy after policy improvement.
+            update (bool):  The flag, to apply random policy everytime if 0, otherwise apply improved policy.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
             iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
@@ -156,18 +154,18 @@ class DP:
             delta = 0
             for i in range(self.in_place_V.shape[0]):
                 for j in range(self.in_place_V.shape[1]):
-                    # Calculate excluding start and terminal state
+                    # Exclude calculating start and terminal state
                     if (i == 0 and j == 0) or (i == 3 and j == 3):
                         continue
 
                     old_V = self.in_place_V[i][j]
                     new_V = 0
 
-                    # If the policy is not updated and keep equiprobable random
+                    # If the policy is not updating, then keep equiprobable random
                     if update == False:
                         self.policy[i][j] = [0.25, 0.25, 0.25, 0.25]
 
-                    # Calculated a new value function according to the policy
+                    # Calculate a new value function according to the policy
                     for action, action_prob in enumerate(self.policy[i][j]):
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
@@ -271,8 +269,6 @@ class DP:
             else:
                 no_change = 0
                 print('')
-
-            # self.tmp_policy = past_policy
 
             if no_change == converge_num:
                 break
