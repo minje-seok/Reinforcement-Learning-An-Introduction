@@ -334,9 +334,9 @@ class DP:
 
 
 agent = DP(env, row, col, random_policy)
-# agent.policy_evaluation(iter_num=0) # converge at iter 426
-# agent.in_place_policy_evaluation(iter_num=0) # converge at iter 272
-# agent.greedy_policy_improvement(in_place=False) # Show updated policy based on value function performed in policy evaluation
+# agent.policy_evaluation(iter_num=0) # Converge at iter 426
+# agent.in_place_policy_evaluation(iter_num=0) # Converge at iter 272
+# agent.greedy_policy_improvement(in_place=False) # Show updated policy based on value function after performing at policy evaluation
 
-# agent.policy_iteration(update=True, evaluation_num=0) # policy converges at iter 3
-# agent.value_iteration() # value function converges at iter 3
+# agent.policy_iteration(update=True, evaluation_num=0) # Policy converges at iter 3
+# agent.value_iteration() # Value function converges at iter 3
