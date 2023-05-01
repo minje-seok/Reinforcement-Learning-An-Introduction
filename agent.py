@@ -75,17 +75,17 @@ class DP:
 
     def policy_evaluation(self, update=False, iter_num=0, gamma=1.0, theta=1e-10):
         '''
-        Perform policy evaluation to compute the value function for a given policy using 1-array.
+        Perform policy evaluation to compute the value function according to the given policy using 1-array.
 
         Args:
-            update (bool):  The flag, to apply random policy everytime if 0, otherwise apply improved policy.
+            update (bool): The flag, apply random policy everytime if 0, otherwise apply improved policy.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
-            iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
-                            or iterates as many times as its value.
+            iter_num (int): The number of iterations, iterates until stopped by theta if its value is 0 (default),
+                            otherwise iterates as many times as its value.
 
         Returns:
-            value function (np.array): The computed value function for given policy.
+            value function (np.array): The computed value function according to the given policy.
         '''
 
         iter = 0
@@ -113,15 +113,15 @@ class DP:
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
 
-                        # action probability * (immediate reward + discount factor * next state-value function)
+                        # new state-value function = action probability * (immediate reward + discount factor * next state-value function)
                         new_V += action_prob * (reward + gamma * self.V[x][y])
                         self.env.reset()
 
-                    # Policy evaluation: Store computed new value function to self.next_V
+                    # Policy evaluation: Store computed new value function in another array, self.next_V
                     self.next_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
 
-            # Break the loop when the delta is smaller than theta or iter_num is reached
+            # Break the loop when the delta is smaller than theta or iter is reached to iter_num
             if delta < theta or iter == iter_num:
                 print('Policy Evaluation - iter: {0}'.format(iter))
                 print(self.next_V, '\n')
@@ -133,17 +133,17 @@ class DP:
     
     def in_place_policy_evaluation(self, update=False, iter_num=0, gamma=1.0, theta=1e-10):
         '''
-        Perform policy evaluation to compute the value function for a given policy using only 1-array.
+        Perform policy evaluation to compute the value function according to the given policy using only 1-array.
 
         Args:
-            update (bool):  The flag, to apply random policy everytime if 0, otherwise apply improved policy.
+            update (bool): The flag, apply random policy everytime if 0, otherwise apply improved policy.
             gamma (float): The discount factor, should be between 0 and 1.
             theta (float): The convergence threshold.
-            iter_num (int): The number of iterations, If it is 0 (default), it iterates until stopped by theta
-                            or iterates as many times as its value.
+            iter_num (int): The number of iterations, iterates until stopped by theta if its value is 0 (default),
+                            otherwise iterates as many times as its value.
 
         Returns:
-            value function (np.array): The computed value function for given policy.
+            value function (np.array): The computed value function according to the given policy.
         '''
 
         iter = 0
@@ -171,15 +171,15 @@ class DP:
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
                         
-                        # action probability * (immediate reward + discount factor * next state-value function)
+                        # new state-value function = action probability * (immediate reward + discount factor * next state-value function)
                         new_V += action_prob * (reward + gamma * self.in_place_V[x][y])
                         self.env.reset()
 
-                    # In-place policy evaluation: Update the computed new value function to self.in_place_V
+                    # In-place policy evaluation: Store the computed new value function in same array, self.in_place_V
                     self.in_place_V[i][j] = new_V
                     delta = max(delta, abs(old_V - new_V))
 
-            # Break the loop when the delta is smaller than theta or iter_num is reached
+            # Break the loop when the delta is smaller than theta or iter is reached to iter_num
             if delta < theta or iter == iter_num:
                 print('Policy Evaluation(in-place) - iter: {0}'.format(iter))
                 print(self.in_place_V, '\n')
@@ -191,11 +191,11 @@ class DP:
 
     def greedy_policy_improvement(self, in_place=False, show_policy=True, gamma=1.0):
         '''
-        Perform greedy policy improvement to choose the best action-value function for a given policy and update policy.
+        Perform greedy policy improvement to choose the best action-value function according to the given policy and update policy.
 
         Args:
-            in_place (bool): Determines whether policy evaluation is in_place method.
-            show_policy (int): Determines whether to show policy indicated by arrows.
+            in_place (bool): The flag, determines whether policy evaluation is in_place method or not.
+            show_policy (int): The flag, determines whether to show policy indicated by arrows.
             gamma (float): The discount factor, should be between 0 and 1.
 
         Returns:
@@ -203,7 +203,7 @@ class DP:
         '''
         for i in range(self.V.shape[0]):
             for j in range(self.V.shape[1]):
-                # Calculate excluding start and terminal state
+                # Exclude calculating start and terminal state
                 if (i == 0 and j == 0) or (i == 3 and j == 3):
                     continue
 
@@ -219,7 +219,6 @@ class DP:
                         Q.append(reward + gamma * self.in_place_V[x][y])
                     else:
                         Q.append(reward + gamma * self.V[x][y])
-
                     self.env.reset()
 
                 self.Q[i][j] = Q
@@ -237,22 +236,23 @@ class DP:
 
     def policy_iteration(self, evaluation_num, update=False, show_policy=1, converge_num=3):
         '''
-        Perform policy iteration until convergence of policy improvement.
+        Perform policy iteration until the policy converges.
 
         Args:
-            evaluation_num (int):
-             update (bool):  The flag, to apply rando policy everytime if 0, otherwise apply policy after policy improvement.
-             converge_num (int): The convergence threshold, the number of iterations that no longer change even with improvement.
+             evaluation_num (int): The number of iterations at policy evaluation, iterates until stopped by theta if its value is 0 (default),
+                                   otherwise iterates as many times as its value.
+             update (bool): The flag, apply random policy everytime if 0, otherwise apply improved policy.
+             converge_num (int): The convergence threshold, is the number of iterations that no longer change at policy.
 
         Returns:
-            value function (np.array): The computed value function for given policy.
+            value function (np.array): The computed value function according to the given policy.
         '''
         iter = 0
         no_change = 0
 
         while True:
             iter += 1
-            # Save past policy
+            # Save past policy to compare later
             past_policy = self.policy.copy()
 
             # Execute policy evaluation and policy improvement
@@ -263,7 +263,6 @@ class DP:
 
             # Compare current policy and past policy
             if np.array_equal(past_policy, self.policy):
-                # if np.array_equal(past_policy, self.tmp_policy):
                 no_change += 1
                 print('* There are no change at policy for {0} times\n'.format(no_change))
             else:
@@ -280,42 +279,42 @@ class DP:
         Perform value iteration until the value function converges.
 
         Args:
-             converge_num (int): The convergence threshold, the number of iterations that no longer change.
+             converge_num (int): The convergence threshold, is the number of iterations that no longer change at value function.
+             gamma (float): The discount factor, should be between 0 and 1.
 
         return:
-            value function (np.array): The computed value function for given policy.
+            value function (np.array): The computed value function according to the given policy.
         '''
 
         iter = 0
         no_change = 0
 
-        # Repeat until the difference between the old and new value functions is less than theta
         while True:
             iter += 1
 
             print('----- Value Iteration - iter: {0} -----'.format(iter))
             for i in range(self.max_V.shape[0]):
                 for j in range(self.max_V.shape[1]):
-                    # Calculate excluding start and terminal state
+                    # Exclude calculating start and terminal state
                     if (i == 0 and j == 0) or (i == 3 and j == 3):
                         continue
 
                     new_V = []
 
-                    # Calculated a new max value function according to the policy
+                    # Calculate a new max state-value function
                     for action, action_prob in enumerate(self.policy[i][j]):
                         self.env.create_grid(i, j)
                         next_state, reward, done = self.env.step(action)
                         x, y = self.env.get_current_state()
 
-                        # action-value function = immediate reward + discount factor * next state-value function
+                        # state-value function = immediate reward + discount factor * next state-value function
                         new_V.append((reward + gamma * self.max_V[x][y]))
                         self.env.reset()
 
-                    # Use the max action-value functions as the next state-value function
+                    # new state-value function = max(all possible calculated state-value functions)
                     self.next_max_V[i][j] = np.max(new_V)
 
-            # Compare current state-value and past state-value
+            # Compare current state-value function and past state-value function
             if np.array_equal(self.max_V, self.next_max_V):
                 print(self.next_max_V, '\n')
                 no_change += 1
@@ -325,11 +324,10 @@ class DP:
                 no_change = 0
                 print(self.next_max_V, '\n')
 
-            # Break when no_change equals num
             if no_change == converge_num:
                 break
 
-            # Copy self.next_V to self.V which means that the state value-function is updated
+            # Copy self.next_max_V to self.max_V which means that the state value-function is updated
             self.max_V = self.next_max_V.copy()
 
         return self.max_V
@@ -338,7 +336,7 @@ class DP:
 agent = DP(env, row, col, random_policy)
 # agent.policy_evaluation(iter_num=0) # converge at iter 426
 # agent.in_place_policy_evaluation(iter_num=0) # converge at iter 272
-# agent.greedy_policy_improvement(in_place=False)
+# agent.greedy_policy_improvement(in_place=False) # Show updated policy based on value function performed in policy evaluation
 
-agent.policy_iteration(update=True, evaluation_num=0) # policy converges at iter 3
-# agent.value_iteration()
+# agent.policy_iteration(update=True, evaluation_num=0) # policy converges at iter 3
+# agent.value_iteration() # value function converges at iter 3
