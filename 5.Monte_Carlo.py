@@ -7,7 +7,7 @@ from matplotlib import pyplot
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 
-EPISODES = 1000000
+EPISODES = 10000
 env = gym.make("Blackjack-v1", natural=False, sab=False) # render_mode='human'
 
 class MC:
@@ -30,11 +30,6 @@ class MC:
             # Check if the episode is visited for the first time,
             # if yes, take the average of returns and assign the value of the state as an average of returns
             if S not in states[:t]:
-        #         self.V[S] += returns
-        #         self.N[S] += 1
-        #
-        # for S in self.V.keys():
-        #     self.V[S] = self.V[S] / self.N[S]
                 self.N[S] += 1
                 self.V[S] += (returns - self.V[S]) / self.N[S]
 
@@ -97,7 +92,6 @@ for _ in range(EPISODES):
 
     # Perform first-visit MC to estimate value function
     agent.first_visit_MC(states, actions, rewards)
-# print(agent.V.popitem(), '\n')
 
 env.close()
 
