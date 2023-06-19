@@ -1,4 +1,3 @@
-import time
 from collections import defaultdict
 
 import gymnasium as gym
@@ -94,6 +93,7 @@ for _ in range(EPISODES):
     agent.first_visit_MC(states, actions, rewards)
 
 env.close()
+
 
 fig, axes = pyplot.subplots(nrows=2, figsize=(5, 8), subplot_kw={'projection': '3d'})
 axes[0].set_title('value function without usable ace')
