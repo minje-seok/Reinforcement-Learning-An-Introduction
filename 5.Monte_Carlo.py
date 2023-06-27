@@ -10,6 +10,9 @@ plt.style.use('ggplot')
 EPISODES = 10000
 env = gym.make("Blackjack-v1", natural=False, sab=False) # render_mode='human'
 
+env = CustomBlackjackEnv()
+env.reset(player_hand=[10, 5], dealer_hand=[10, 1])  # This will start the game with the player having 10 and 5, and the dealer having 10 and 1.
+
 class CustomBlackjackEnv(BlackjackEnv):
     def reset(self, player_hand=None, dealer_hand=None, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
