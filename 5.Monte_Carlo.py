@@ -11,20 +11,35 @@ EPISODES = 10000
 env = gym.make("Blackjack-v1", natural=False, sab=False) # render_mode='human'
 
 class CustomBlackjackEnv(BlackjackEnv):
-    def __init__(self, initial_state=None):
-        super().__init__()
-        self.initial_state = initial_state
+    def reset(self, player_hand=None, dealer_hand=None, seed: Optional[int] = None, options: Optional[dict] = None):
+        super().reset(seed=seed)
 
-    def reset(self, init_state=False):
-        if init_state is not None:
-            self.initial_state = init_state
-        return super().reset()
+        if player_hand is not None:
+            self.player = player_hand
+        else:
+            self.player = draw_hand(self.np_random)
 
-    def _reset(self):
-        if self.initial_state is not None:
-            self.player, self.dealer, _ = self.initial_state
-            self.initial_state = None
-        return super()._reset()
+        if dealer_hand is not None:
+            self.dealer = dealer_hand
+        else:
+            self.dealer = draw_hand(self.np_random)
+
+        _, dealer_card_value, _ = self._get_obs()
+
+        suits = ["C", "D", "H", "S"]
+        self.dealer_top_card_suit = self.np_random.choice(suits)
+
+        if dealer_card_value == 1:
+            self.dealer_top_card_value_str = "A"
+        elif dealer_card_value == 10:
+            self.dealer_top_card_value_str = self.np_random.choice(["J", "Q", "K"])
+        else:
+            self.dealer_top_card_value_str = str(dealer_card_value)
+
+        if self.render_mode == "human":
+            self.render()
+        return self._get_obs(), {}
+
 
 class MC:
     def __init__(self):
